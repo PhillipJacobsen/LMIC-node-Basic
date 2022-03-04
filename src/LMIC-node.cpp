@@ -4,7 +4,8 @@
  * 
  *  Function:      LMIC-node main application file.
  * 
- *  Copyright:     Copyright (c) 2021 Leonel Lopes Parente
+ *  Copyright:     Copyright (c) 2022 Phillip Jacobsen
+ *                 Copyright (c) 2021 Leonel Lopes Parente
  *                 Copyright (c) 2018 Terry Moore, MCCI
  *                 Copyright (c) 2015 Thomas Telkamp and Matthijs Kooijman
  *
@@ -19,7 +20,7 @@
  * 
  *  License:       MIT License. See accompanying LICENSE file.
  * 
- *  Author:        Leonel Lopes Parente
+ *  Author:        Phillip Jacobsen
  * 
  *  Description:   To get LMIC-node up and running no changes need to be made
  *                 to any source code. Only configuration is required
@@ -44,7 +45,6 @@
  * 
  *  Dependencies:  External libraries:
  *                 MCCI LoRaWAN LMIC library  https://github.com/mcci-catena/arduino-lmic
- *                 IBM LMIC framework         https://github.com/matthijskooijman/arduino-lmic  
  *                 U8g2                       https://github.com/olikraus/u8g2
  *                 EasyLed                    https://github.com/lnlp/EasyLed
  *
@@ -339,12 +339,6 @@ void printHeader(void)
         display.clear();
         display.setCursor(COL_0, HEADER_ROW);
         display.print(F("LMIC-node"));
-        #ifdef ABP_ACTIVATION
-            display.drawString(ABPMODE_COL, HEADER_ROW, "ABP");
-        #endif
-        #ifdef CLASSIC_LMIC
-            display.drawString(CLMICSYMBOL_COL, HEADER_ROW, "*");
-        #endif
         display.drawString(COL_0, DEVICEID_ROW, deviceId);
         display.setCursor(COL_0, INTERVAL_ROW);
         display.print(F("Interval:"));
@@ -383,94 +377,8 @@ void printHeader(void)
 }     
 
 
-#ifdef ABP_ACTIVATION
-    void setAbpParameters(dr_t dataRate = DefaultABPDataRate, s1_t txPower = DefaultABPTxPower) 
-    {
-        // Set static session parameters. Instead of dynamically establishing a session
-        // by joining the network, precomputed session parameters are be provided.
-        #ifdef PROGMEM
-            // On AVR, these values are stored in flash and only copied to RAM
-            // once. Copy them to a temporary buffer here, LMIC_setSession will
-            // copy them into a buffer of its own again.
-            uint8_t appskey[sizeof(APPSKEY)];
-            uint8_t nwkskey[sizeof(NWKSKEY)];
-            memcpy_P(appskey, APPSKEY, sizeof(APPSKEY));
-            memcpy_P(nwkskey, NWKSKEY, sizeof(NWKSKEY));
-            LMIC_setSession (0x1, DEVADDR, nwkskey, appskey);
-        #else
-            // If not running an AVR with PROGMEM, just use the arrays directly
-            LMIC_setSession (0x1, DEVADDR, NWKSKEY, APPSKEY);
-        #endif
 
-        #if defined(CFG_eu868)
-            // Set up the channels used by the Things Network, which corresponds
-            // to the defaults of most gateways. Without this, only three base
-            // channels from the LoRaWAN specification are used, which certainly
-            // works, so it is good for debugging, but can overload those
-            // frequencies, so be sure to configure the full frequency range of
-            // your network here (unless your network autoconfigures them).
-            // Setting up channels should happen after LMIC_setSession, as that
-            // configures the minimal channel set. The LMIC doesn't let you change
-            // the three basic settings, but we show them here.
-            LMIC_setupChannel(0, 868100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-            LMIC_setupChannel(1, 868300000, DR_RANGE_MAP(DR_SF12, DR_SF7B), BAND_CENTI);      // g-band
-            LMIC_setupChannel(2, 868500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-            LMIC_setupChannel(3, 867100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-            LMIC_setupChannel(4, 867300000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-            LMIC_setupChannel(5, 867500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-            LMIC_setupChannel(6, 867700000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-            LMIC_setupChannel(7, 867900000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-            LMIC_setupChannel(8, 868800000, DR_RANGE_MAP(DR_FSK,  DR_FSK),  BAND_MILLI);      // g2-band
-            // TTN defines an additional channel at 869.525Mhz using SF9 for class B
-            // devices' ping slots. LMIC does not have an easy way to define set this
-            // frequency and support for class B is spotty and untested, so this
-            // frequency is not configured here.
-        #elif defined(CFG_us915) || defined(CFG_au915)
-            // NA-US and AU channels 0-71 are configured automatically
-            // but only one group of 8 should (a subband) should be active
-            // TTN recommends the second sub band, 1 in a zero based count.
-            // https://github.com/TheThingsNetwork/gateway-conf/blob/master/US-global_conf.json
-            LMIC_selectSubBand(1);
-        #elif defined(CFG_as923)
-            // Set up the channels used in your country. Only two are defined by default,
-            // and they cannot be changed.  Use BAND_CENTI to indicate 1% duty cycle.
-            // LMIC_setupChannel(0, 923200000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);
-            // LMIC_setupChannel(1, 923400000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);
-
-            // ... extra definitions for channels 2..n here
-        #elif defined(CFG_kr920)
-            // Set up the channels used in your country. Three are defined by default,
-            // and they cannot be changed. Duty cycle doesn't matter, but is conventionally
-            // BAND_MILLI.
-            // LMIC_setupChannel(0, 922100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_MILLI);
-            // LMIC_setupChannel(1, 922300000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_MILLI);
-            // LMIC_setupChannel(2, 922500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_MILLI);
-
-            // ... extra definitions for channels 3..n here.
-        #elif defined(CFG_in866)
-            // Set up the channels used in your country. Three are defined by default,
-            // and they cannot be changed. Duty cycle doesn't matter, but is conventionally
-            // BAND_MILLI.
-            // LMIC_setupChannel(0, 865062500, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_MILLI);
-            // LMIC_setupChannel(1, 865402500, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_MILLI);
-            // LMIC_setupChannel(2, 865985000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_MILLI);
-
-            // ... extra definitions for channels 3..n here.
-        #endif
-
-        // Disable link check validation
-        LMIC_setLinkCheckMode(0);
-
-        // TTN uses SF9 for its RX2 window.
-        LMIC.dn2Dr = DR_SF9;
-
-        // Set data rate and transmit power (note: txpow is possibly ignored by the library)
-        LMIC_setDrTxpow(dataRate, txPower);    
-    }
-#endif //ABP_ACTIVATION
-
-
-void initLmic(bit_t adrEnabled = 1,
+void initLmic(bit_t adrEnabled = 0,
               dr_t abpDataRate = DefaultABPDataRate, 
               s1_t abpTxPower = DefaultABPTxPower) 
 {
@@ -481,14 +389,11 @@ void initLmic(bit_t adrEnabled = 1,
     // Reset MAC state
     LMIC_reset();
 
-    #ifdef ABP_ACTIVATION
-        setAbpParameters(abpDataRate, abpTxPower);
-    #endif
-
     // Enable or disable ADR (data rate adaptation). 
     // Should be turned off if the device is not stationary (mobile).
     // 1 is on, 0 is off.
     LMIC_setAdrMode(adrEnabled);
+
 
     if (activationMode == ActivationMode::OTAA)
     {
@@ -576,10 +481,17 @@ void onEvent(ev_t ev)
             // have to wait until the current doWork interval ends.
             os_clearCallback(&doWorkJob);
             os_setCallback(&doWorkJob, doWorkCallback);
+
+            LMIC_setDrTxpow(DR_SF7, 14);    //Is this the correct place to change uplink data rate after join?  
+            //Currently the power setting does nothing in the library
+            //“LMIC_setDrTxpow()` sets the spreading factor, but that will get reset by network downlinks that happen during and after a joint. In other words, you may find that you have to set the data rate several times to make things effective”
+
             break;
 
         case EV_TXCOMPLETE:
             // Transmit completed, includes waiting for RX windows.
+            
+
             setTxIndicatorsOn(false);   
             printEvent(timestamp, ev);
             printFrameCounters();
@@ -785,7 +697,7 @@ void processDownlink(ostime_t txCompleteTimestamp, uint8_t fPort, uint8_t* data,
     // To send the reset counter command to the node, send a downlink message
     // (e.g. from the TTN Console) with single byte value resetCmd on port cmdPort.
 
-    const uint8_t cmdPort = 100;
+    const uint8_t cmdPort = 100;    // was 100
     const uint8_t resetCmd= 0xC0;
 
     if (fPort == cmdPort && dataLength == 1 && data[0] == resetCmd)
