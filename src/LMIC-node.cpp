@@ -20,7 +20,7 @@
  * 
  *  License:       MIT License. See accompanying LICENSE file.
  * 
- *  Author:        Phillip Jacobsen
+ *  Author:        Phillip Jacobsen, Leonel Lopes Parente
  * 
  *  Description:   To get LMIC-node up and running no changes need to be made
  *                 to any source code. Only configuration is required
@@ -45,7 +45,7 @@
  * 
  *  Dependencies:  External libraries:
  *                 MCCI LoRaWAN LMIC library  https://github.com/mcci-catena/arduino-lmic
- *                 U8g2                       https://github.com/olikraus/u8g2
+  *                 U8g2                       https://github.com/olikraus/u8g2
  *                 EasyLed                    https://github.com/lnlp/EasyLed
  *
  ******************************************************************************/
@@ -680,7 +680,9 @@ void processWork(ostime_t doWorkJobTimeStamp)
             uint8_t fPort = 10;
             payloadBuffer[0] = counterValue >> 8;
             payloadBuffer[1] = counterValue & 0xFF;
-            uint8_t payloadLength = 2;
+            //uint8_t payloadLength = 2;
+
+            uint8_t payloadLength = 20;  // send 6 dummy bytes
 
             scheduleUplink(fPort, payloadBuffer, payloadLength);
         }
