@@ -1,0 +1,3 @@
+Using Platform espressif32 @ 3.5.0 everything seems to work
+Compile error occured when using version 6.5.0
+Need to explicilty list version in the dependecy of .ini file.

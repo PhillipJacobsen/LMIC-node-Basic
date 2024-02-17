@@ -58,7 +58,7 @@
 //  ▀▀▀ ▀▀▀ ▀▀▀ ▀ ▀   ▀▀▀ ▀▀▀ ▀▀  ▀▀▀   ▀▀  ▀▀▀ ▀▀▀ ▀▀▀ ▀ ▀
 
 
-const uint8_t payloadBufferLength = 4;    // Adjust to fit max payload length
+const uint8_t payloadBufferLength = 150;    // Adjust to fit max payload length
 
 
 //  █ █ █▀▀ █▀▀ █▀▄   █▀▀ █▀█ █▀▄ █▀▀   █▀▀ █▀█ █▀▄
@@ -682,7 +682,7 @@ void processWork(ostime_t doWorkJobTimeStamp)
             payloadBuffer[1] = counterValue & 0xFF;
             //uint8_t payloadLength = 2;
 
-            uint8_t payloadLength = 20;  // send 6 dummy bytes
+            uint8_t payloadLength = 110;  // send 40 dummy bytes
 
             scheduleUplink(fPort, payloadBuffer, payloadLength);
         }
