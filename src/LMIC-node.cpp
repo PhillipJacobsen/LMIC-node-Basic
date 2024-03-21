@@ -681,7 +681,7 @@ void processWork(ostime_t doWorkJobTimeStamp)
             payloadBuffer[0] = counterValue >> 8;
             payloadBuffer[1] = counterValue & 0xFF;
             uint8_t payloadLength = 2;
-
+            //payloadLength = 13;
             scheduleUplink(fPort, payloadBuffer, payloadLength);
         }
     }
